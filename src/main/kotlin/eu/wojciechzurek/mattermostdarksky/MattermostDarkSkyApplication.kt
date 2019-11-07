@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.boot.web.reactive.error.DefaultErrorAttributes
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -47,7 +48,11 @@ class WeatherHandler(
         private val apiKey: String
 ) {
 
-    private val webClient = WebClient.create("https://api.darksky.net/forecast/{api}/{location}/")
+    private val webClient = WebClient
+            .builder()
+            .baseUrl("https://api.darksky.net/forecast/{api}/{location}/")
+            .defaultHeader(HttpHeaders.ACCEPT_ENCODING, "gzip")
+            .build()
 
     private val icons = mapOf(
             "clear-day" to "☼",
