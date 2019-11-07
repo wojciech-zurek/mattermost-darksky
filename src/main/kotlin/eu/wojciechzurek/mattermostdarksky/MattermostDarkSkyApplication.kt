@@ -76,18 +76,17 @@ class WeatherHandler(
                 .onStatus(HttpStatus::isError) { Mono.error(DarkSkyApiException(it.statusCode(), "Dark Sky Endpoint exception")) }
                 .bodyToMono(DarSkyResponse::class.java)
                 .map {
-                    it.let { darkSky ->
-                        MattermostResponse(
-                                text = localeService.getMessage(
-                                        "theme.current",
-                                        request.exchange(),
-                                        icons[darkSky.currently.icon],
-                                        darkSky.currently.apparentTemperature.toString(),
-                                        darkSky.currently.pressure.toString(),
-                                        darkSky.currently.summary
-                                )
-                        )
-                    }
+
+                    MattermostResponse(
+                            text = localeService.getMessage(
+                                    "theme.current",
+                                    request.exchange(),
+                                    icons[it.currently.icon],
+                                    it.currently.apparentTemperature.toString(),
+                                    it.currently.pressure.toString(),
+                                    it.currently.summary
+                            )
+                    )
                 }
                 .flatMap {
                     ok().bodyValue(it)
