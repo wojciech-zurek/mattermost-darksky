@@ -73,7 +73,7 @@ class WeatherHandler(
                 .get()
                 .uri("?lang=pl&exclude=minutely,hourly,daily,flags,alerts&units=auto", apiKey, location)
                 .retrieve()
-                .onStatus(HttpStatus::isError) { response -> Mono.error(DarkSkyApiException(response.statusCode(), "Dark Sky Endpoint exception")) }
+                .onStatus(HttpStatus::isError) { Mono.error(DarkSkyApiException(it.statusCode(), "Dark Sky Endpoint exception")) }
                 .bodyToMono(DarSkyResponse::class.java)
                 .map {
                     it.let { darkSky ->
