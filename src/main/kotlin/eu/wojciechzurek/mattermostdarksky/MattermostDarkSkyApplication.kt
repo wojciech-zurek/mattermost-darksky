@@ -1,10 +1,14 @@
 package eu.wojciechzurek.mattermostdarksky
 
 import eu.wojciechzurek.mattermostdarksky.i18.LocaleService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.boot.web.reactive.error.DefaultErrorAttributes
 import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.config.EnableWebFlux
@@ -12,7 +16,6 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
-import org.springframework.web.reactive.function.server.body
 import org.springframework.web.reactive.function.server.router
 import reactor.core.publisher.Mono
 
@@ -22,10 +25,10 @@ import reactor.core.publisher.Mono
 class MattermostDarkSkyApplication {
 
     @Bean
-    fun routesSGB(handler: WeatherHandler) = router {
+    fun routes(handler: WeatherHandler) = router {
         "/api".nest {
             accept(MediaType.APPLICATION_JSON).nest {
-                GET("/weather/{location}", handler::weather)
+                GET("/weather/current/{location}", handler::weather)
             }
         }
     }
@@ -35,6 +38,8 @@ fun main(args: Array<String>) {
     runApplication<MattermostDarkSkyApplication>(*args)
 }
 
+fun <T> loggerFor(clazz: Class<T>): Logger = LoggerFactory.getLogger(clazz)
+
 @Component
 class WeatherHandler(
         private val localeService: LocaleService,
@@ -42,7 +47,7 @@ class WeatherHandler(
         private val apiKey: String
 ) {
 
-    private val webClient = WebClient.create("https://api.darksky.net/forecast/{api}/{localization}/")
+    private val webClient = WebClient.create("https://api.darksky.net/forecast/{api}/{location}/")
 
     private val icons = mapOf(
             "clear-day" to "☼",
@@ -63,29 +68,47 @@ class WeatherHandler(
 
     fun weather(request: ServerRequest): Mono<ServerResponse> {
         val location = request.pathVariable("location")
+        val apiKey = request.queryParam("apiKey").orElse(this.apiKey)
         return webClient
                 .get()
                 .uri("?lang=pl&exclude=minutely,hourly,daily,flags,alerts&units=auto", apiKey, location)
-                .exchange()
-                .map { it.bodyToMono(DarSkyResponse::class.java) }
+                .retrieve()
+                .onStatus(HttpStatus::isError) { response -> Mono.error(DarkSkyApiException(response.statusCode(), "Dark Sky Endpoint exception")) }
+                .bodyToMono(DarSkyResponse::class.java)
                 .map {
-                    it.map { darkSkyResponse ->
-                        darkSkyResponse.let { darkSky ->
-                            MattermostResponse(
-                                    text = localeService.getMessage(
-                                            "theme.current",
-                                            request.exchange(),
-                                            icons[darkSky.currently.icon],
-                                            darkSky.currently.apparentTemperature.toString(),
-                                            darkSky.currently.pressure.toString(),
-                                            darkSky.currently.summary
-                                    )
-                            )
-                        }
+                    it.let { darkSky ->
+                        MattermostResponse(
+                                text = localeService.getMessage(
+                                        "theme.current",
+                                        request.exchange(),
+                                        icons[darkSky.currently.icon],
+                                        darkSky.currently.apparentTemperature.toString(),
+                                        darkSky.currently.pressure.toString(),
+                                        darkSky.currently.summary
+                                )
+                        )
                     }
                 }
                 .flatMap {
-                    ok().body(it)
+                    ok().bodyValue(it)
                 }
+    }
+}
+
+class DarkSkyApiException(val httpStatus: HttpStatus, message: String) : RuntimeException(message)
+
+@Component
+class GlobalErrorAttributes : DefaultErrorAttributes() {
+
+    override fun getErrorAttributes(request: ServerRequest, includeStackTrace: Boolean): Map<String, Any> {
+        val map = super.getErrorAttributes(request, includeStackTrace)
+
+        val throwable = getError(request)
+        if (throwable is DarkSkyApiException) {
+            map["status"] = throwable.httpStatus.value()
+            map["error"] = throwable.httpStatus.reasonPhrase
+        }
+
+        return map
     }
 }
