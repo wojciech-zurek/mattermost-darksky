@@ -12,6 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.ServerResponse.*
 import reactor.core.publisher.Mono
 
 @Component
@@ -52,6 +53,6 @@ class WeatherHandler(
                 .bodyToMono(DarSkyResponse::class.java)
                 .map { weatherType.getText(it, localeService, request.exchange()) }
                 .map { MattermostResponse(receiver, it) }
-                .flatMap { ServerResponse.ok().bodyValue(it) }
+                .flatMap { ok().bodyValue(it) }
     }
 }
