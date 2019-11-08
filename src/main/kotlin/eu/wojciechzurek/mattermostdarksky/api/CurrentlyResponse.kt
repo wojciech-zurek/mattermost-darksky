@@ -1,4 +1,4 @@
-package eu.wojciechzurek.mattermostdarksky
+package eu.wojciechzurek.mattermostdarksky.api
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 

@@ -1,10 +1,9 @@
-package eu.wojciechzurek.mattermostdarksky
+package eu.wojciechzurek.mattermostdarksky.api
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class MattermostResponse(
-
         @JsonProperty("response_type")
-        val responseType: String = "in_channel",
+        val responseType: String = "ephemeral",
         val text: String
 )
