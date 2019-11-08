@@ -35,7 +35,7 @@ class WeatherHandler(
         val apiKey = request.queryParam("apiKey").orElse(this.apiKey)
         val lang = request.queryParam("lang").orElse("pl")
         val units = request.queryParam("units").orElse("auto")
-        val receiver = when(request.queryParam("text").orElse("ephemeral")){
+        val receiver = when (request.queryParam("text").orElse("ephemeral")) {
             "channel" -> "in_channel"
             "kanal" -> "in_channel"//polish channel
             else -> "ephemeral"
@@ -50,14 +50,8 @@ class WeatherHandler(
                     Mono.error(DarkSkyApiException(it.statusCode(), "Dark Sky Endpoint exception"))
                 }
                 .bodyToMono(DarSkyResponse::class.java)
-                .map {
-                    weatherType.getText(it, localeService, request.exchange())
-                }
-                .map {
-                    MattermostResponse(receiver, it)
-                }
-                .flatMap {
-                    ServerResponse.ok().bodyValue(it)
-                }
+                .map { weatherType.getText(it, localeService, request.exchange()) }
+                .map { MattermostResponse(receiver, it) }
+                .flatMap { ServerResponse.ok().bodyValue(it) }
     }
 }
