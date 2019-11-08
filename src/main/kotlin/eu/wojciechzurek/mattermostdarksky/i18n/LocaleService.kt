@@ -1,4 +1,4 @@
-package eu.wojciechzurek.mattermostdarksky.i18
+package eu.wojciechzurek.mattermostdarksky.i18n
 
 import org.springframework.web.server.ServerWebExchange
 

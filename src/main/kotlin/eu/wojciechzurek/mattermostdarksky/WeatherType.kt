@@ -1,7 +1,7 @@
 package eu.wojciechzurek.mattermostdarksky
 
 import eu.wojciechzurek.mattermostdarksky.api.DarSkyResponse
-import eu.wojciechzurek.mattermostdarksky.i18.LocaleService
+import eu.wojciechzurek.mattermostdarksky.i18n.LocaleService
 import org.springframework.web.server.ServerWebExchange
 import kotlin.math.roundToInt
 

@@ -3,7 +3,7 @@ package eu.wojciechzurek.mattermostdarksky
 import eu.wojciechzurek.mattermostdarksky.api.DarSkyResponse
 import eu.wojciechzurek.mattermostdarksky.api.DarkSkyApiException
 import eu.wojciechzurek.mattermostdarksky.api.MattermostResponse
-import eu.wojciechzurek.mattermostdarksky.i18.LocaleService
+import eu.wojciechzurek.mattermostdarksky.i18n.LocaleService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
